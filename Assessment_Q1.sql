@@ -10,7 +10,9 @@ Select	uc.id as owner_id, concat(uc.first_name, ' ', uc.last_name) as name,
     round(sum(ss.confirmed_amount) / 100, 2) as total_deposits
 from users_customuser uc join plans_plan pp on pp.owner_id = uc.id
 	join savings_savingsaccount ss on ss.plan_id = pp.id
-where ss.confirmed_amount > 0 and (pp.is_regular_savings = 1 or pp.is_a_fund = 1) -- Only consider plans with confirmed (funded) deposits
+-- Only consider plans with confirmed (funded) deposits
+where ss.confirmed_amount > 0 and (pp.is_regular_savings = 1 or pp.is_a_fund = 1) 
 group by uc.id, uc.first_name, uc.last_name
-having savings_count > 0 and investment_count > 0  -- Only include users with at least one funded savings AND one funded investment plan
+-- Only include users with at least one funded savings AND one funded investment plan
+having savings_count > 0 and investment_count > 0 
 order by total_deposits desc;
