@@ -10,16 +10,32 @@ Each section includes:
 
 ## Assessment_Q1
 
-### Approach
-I used Common Table Expressions (CTEs) to simplify the query into three parts:  
-- One for user info (`users_customuser`) where I got the full names using `CONCAT(first_name, last_name)` function  
-- The second to aggregate only funded savings plans (`is_regular_savings = 1`) with `confirmed_amount > 0`  
-- The third to aggregate only funded investment plans (`is_a_fund = 1`) with `confirmed_amount > 0`.
+### Approach:
 
-Finally, I joined the three CTEs on `owner_id` and computed the total deposits in naira by dividing the sum of confirmed amounts by 100. The result was sorted in descending order of `total_deposits` as requested in the task.
+To achieve this, I joined the users_customuser, plans_plan, and savings_savingsaccount tables using their respective foreign key relationships. I focused only on funded plans by filtering for confirmed_amount > 0.
 
-### Challenges
-Initially, I tried combining savings and investment plans in one query using `OR`, but it returned incorrect or incomplete data. I realized that users could have neither, one, or both types of plans, and some plans might not be funded. Separating them into distinct CTEs allowed for clearer logic and easier filtering.
+Next, I narrowed the scope to include only plans classified as:
+
+Savings plans (is_regular_savings = 1), and
+
+Investment plans (is_a_fund = 1).
+
+I used COUNT(DISTINCT ...) to avoid double-counting plans for each user and calculated the total deposit amount by summing the confirmed amounts and converting the result from kobo to Naira by dividing by 100.
+
+To ensure each user had at least one savings and one investment plan, I used a HAVING clause. Finally, I ordered the output by total deposits in descending order to identify top-tier customers.
+
+
+---
+
+### Challenges:
+
+- I had to include p.is_regular_savings = 1 OR p.is_a_fund = 1 in the WHERE clause after noticing the initial query was summing all deposits per user — including unrelated plan types like wallets or donations. Without this, deposit totals were inaccurate.
+
+- I used the HAVING clause to ensure that only users with both funded savings and investment plans were returned. The WHERE clause alone couldn’t distinguish users with both types.
+
+- I ensured that only funded plans were counted by filtering with confirmed_amount > 0, preventing plans with no financial activity from affecting the results.
+
+
 
 ---
 
