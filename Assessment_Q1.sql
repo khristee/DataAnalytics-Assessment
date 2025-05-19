@@ -1,28 +1,16 @@
 -- High-Value Customers with Multiple Products
 -- This query identifies users with at least one funded savings plan AND one funded investment plan , sorted by total deposits.
-use adashi_staging;
 
--- CTE to get user names
-with user as (
-    select	id, concat(first_name, ' ', last_name) as name
-    from users_customuser
-),
-
--- CTE to aggregate funded savings plans per user
-savings as (
-    select ss.owner_id, count(distinct ss.plan_id) as savings_count, sum(ss.confirmed_amount) as savings_amount
-    from savings_savingsaccount ss join plans_plan pp on ss.plan_id = pp.id
-    where ss.confirmed_amount > 0 and pp.is_regular_savings = 1
-    group by ss.owner_id
-),
--- CTE to aggregate funded investment plans per user
-investment as ( 
-    select	ss.owner_id, count(distinct ss.plan_id) as investment_count, sum(ss.confirmed_amount) as investment_amount
-    from savings_savingsaccount ss join plans_plan pp on ss.plan_id = pp.id
-    where ss.confirmed_amount > 0 and pp.is_a_fund = 1
-    group by ss.owner_id
-)
--- Final result combining users who have both savings and investment plans
-select u.id as owner_id, u.name, s.savings_count, i.investment_count, round((s.savings_amount + i.investment_amount) / 100, 2) as total_deposits
-from user u join savings s on u.id = s.owner_id join investment i on u.id = i.owner_id
-order by total_deposits desc
+Select	uc.id as owner_id, concat(uc.first_name, ' ', uc.last_name) as name, 
+    -- Count of distinct funded savings plans
+    count(distinct case when pp.is_regular_savings = 1 then pp.id end) as savings_count,
+     -- Count of distinct funded investment plans
+	count(distinct case when pp.is_a_fund = 1 then pp.id end) as investment_count, 
+     -- Sum of confirmed deposit amounts (converted from kobo to naira)
+    round(sum(ss.confirmed_amount) / 100, 2) as total_deposits
+from users_customuser uc join plans_plan pp on pp.owner_id = uc.id
+	join savings_savingsaccount ss on ss.plan_id = pp.id
+where ss.confirmed_amount > 0 and (pp.is_regular_savings = 1 or pp.is_a_fund = 1) -- Only consider plans with confirmed (funded) deposits
+group by uc.id, uc.first_name, uc.last_name
+having savings_count > 0 and investment_count > 0  -- Only include users with at least one funded savings AND one funded investment plan
+order by total_deposits desc;
