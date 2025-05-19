@@ -2,10 +2,6 @@
 
 This repository contains solutions to four SQL-based analytical problems related to customer behavior, transactions, and account activity.
 
-Each section includes:
-- **Approach**: Explanation of how the problem was tackled.
-- **Challenges**: Any difficulties encountered and how they were resolved.
-
 ---
 
 ## Assessment_Q1
